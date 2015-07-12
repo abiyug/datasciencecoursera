@@ -1,0 +1,63 @@
+
+**README for run_analysis script**  
+**Course: getdata-030**  
+**Date:   07/13/2015**  
+
+###Description: Tidy table for Activity Recognition Experiment Using Smartphone Sensors data.
+
+**The script "run_analysis.R" can be run from R or RStudio command prompt, after uploading the follwoing raw data in the working directory.**
+
+* activity_labels.......*Links the class labels with their activity name*  
+* features..............*List of all features*  
+* subject_test..........*volunteers - there are 30 *  
+* y_test................*activity - there are 6 types*    
+* X_test................*Test dataset*  
+* subject_train.........*volunteers - there are 30 *  
+* y_train...............*Activity - there are 6 types*  
+* X_train...............*Test data set*  
+
+
+**The accelerometer produces data in units of acceleration (distance over time2), and the gyroscope produces data in units of rotational velocity (rotation distance over time) measures rotation around three axes: x, y, and z.**
+
+|*Accelarometer*          |      *Gyrometer*    |
+|:-----------------------:|:-------------------:|
+|Ax       Ay        Az    |  Gx   Gy   Gz       |
+|-6616    13880    -1380  |  915    -68    -49  |
+|-6624    13924    -1496  |  909    -41    -136 |
+|-6680    13896    -1408  |  917    -46    -148 |
+
+**The 30 volunteer's data, for this experiment,  was gathered for the following six activities:**
+
+  *Activity*
+  
+* 1 WALKING
+* 2 WALKING_UPSTAIRS
+* 3 WALKING_DOWNSTAIRS
+* 4 SITTING
+* 5 STANDING
+* 6 LAYING
+
+**These signals were used to estimate variables of the feature vector for each pattern: '-XYZ' is used to denote 3-axial signals in the X, Y and Z directions.**
+
+* tBodyAcc-XYZ
+* tGravityAcc-XYZ
+* tBodyAccJerk-XYZ
+* tBodyGyro-XYZ
+* tBodyGyroJerk-XYZ
+* tBodyAccMag
+* tGravityAccMag
+* tBodyAccJerkMag
+* tBodyGyroMag
+* tBodyGyroJerkMag
+* fBodyAcc-XYZ
+* fBodyAccJerk-XYZ
+* fBodyGyro-XYZ
+* fBodyAccMag
+* fBodyAccJerkMag
+* fBodyGyroMag
+* fBodyGyroJerkMag
+
+**The set of variables that are included in this data set are: **
+
+* mean(): Mean value
+* std(): Standard deviation
