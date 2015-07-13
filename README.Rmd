@@ -8,14 +8,14 @@
 **The script "run_analysis.R" can be run from R or RStudio command prompt. The raw data can be downloaded from here: [download the data from this link](https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip). Upload the follwoing raw data in the working directory.**
 
 ```
-* activity_labels.......*Links the class labels with their activity name*  
-* features..............*List of all features*  
-* subject_test..........*volunteers - there are 30 *  
-* y_test................*activity - there are 6 types*    
-* X_test................*Test dataset*  
-* subject_train.........*volunteers - there are 30 *  
-* y_train...............*Activity - there are 6 types*  
-* X_train...............*Test data set*  
+* activity_labels.......Links the class labels with their activity name  
+* features..............List of all features  
+* subject_test..........volunteers - there are 30  
+* y_test................activity - there are 6 types    
+* X_test................Test dataset  
+* subject_train.........volunteers - there are 30    
+* y_train...............Activity - there are 6 types  
+* X_train...............Test data set  
 ```
 **The accelerometer produces data in units of acceleration (distance over time2), and the gyroscope produces data in units of rotational velocity (rotation distance over time) measures rotation around three axes: x, y, and z.**
 
