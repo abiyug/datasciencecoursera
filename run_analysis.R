@@ -95,8 +95,8 @@ df113 <- select(df12Mean, activity)              #extract column with activity i
 # 3-axial linear acceleration and 3-axial angular velocity of smartphone accelerometer & gyroscope
 
 dfFinal <- dplyr::bind_cols(df113, df111, df112) #bind the columns
-dfFinal[,3] <- NULL # remove the redundunt volunteer column
-dfFinal[,56] <- NULL # remove duplicate volunteer column
+dfFinal <- dfFinal[,-c(3,56)] # remove the redundunt volunteer columns
+
 
 #Test
 head(dfFinal, 20)
