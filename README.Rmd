@@ -1,67 +1,47 @@
+---
+title: "REAMDE"
+output: html_document
+---
 
-**Type:   Code Book for understanding run_analysis script data set tidy process.**  
-**Course: getdata-030**  
-**Date:   07/13/2015**  
+The **run-analysis.R** scripts ingest untidy  raw data and cleans up the 
+data premised on tidy rules -observations are in rows - variables are in
+columns - contained in a single dataset, and saves it as csv file.  
 
-###Description: Tidy table for Activity Recognition Experiment Using Smartphone Sensors data.
+The script first downloads a human activity recognition raw dataset collected from 
+smartphone (samsung-II) with its embedded accelerometer and gyroscope.
+The raw dataset can be downloaded [from here](https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip). 
 
-**The script "run_analysis.R" can be run from R or RStudio command prompt. The raw data can be downloaded from here: [download the data from this link](https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip). Upload the follwoing raw data in the working directory.**
-
+The script will then unzip and load the following files in R studios's working directory. 
 ```
-* activity_labels.......Links the class labels with their activity name  
-* features..............List of all features  
-* subject_test..........volunteers - there are 30  
-* y_test................activity - there are 6 types    
-* X_test................Test dataset  
-* subject_train.........volunteers - there are 30    
-* y_train...............Activity - there are 6 types  
-* X_train...............Test data set  
-```
-**The accelerometer produces data in units of acceleration (distance over time2), and the gyroscope produces data in units of rotational velocity (rotation distance over time) measures rotation around three axes: x, y, and z.**
+activity_labels  #Links the class labels with their activity name
+features         #List of all features
 
-|*Accelarometer*          |      *Gyrometer*    |
-|:-----------------------:|:-------------------:|
-|Ax       Ay        Az    |  Gx   Gy   Gz       |
-|-6616    13880    -1380  |  915    -68    -49  |
-|-6624    13924    -1496  |  909    -41    -136 |
-|-6680    13896    -1408  |  917    -46    -148 |
+subject_test     #volunteers 1 - 30
+y_test           #activity 1-6
+X_test           #Test dataset
 
-**The following six activities were observed for  30 volunteer's who had participated in this excersise.**
-
-  *Activity types*
-```
-* 1 WALKING
-* 2 WALKING_UPSTAIRS
-* 3 WALKING_DOWNSTAIRS
-* 4 SITTING
-* 5 STANDING
-* 6 LAYING
-```
-**These signals were used to estimate variables of the feature vector for each pattern: '-XYZ' is used to denote 3-axial signals in the X, Y and Z directions.**
-
-```
-* tBodyAcc-XYZ
-* tGravityAcc-XYZ
-* tBodyAccJerk-XYZ
-* tBodyGyro-XYZ
-* tBodyGyroJerk-XYZ
-* tBodyAccMag
-* tGravityAccMag
-* tBodyAccJerkMag
-* tBodyGyroMag
-* tBodyGyroJerkMag
-* fBodyAcc-XYZ
-* fBodyAccJerk-XYZ
-* fBodyGyro-XYZ
-* fBodyAccMag
-* fBodyAccJerkMag
-* fBodyGyroMag
-* fBodyGyroJerkMag
-```
-**The set of variables that are included in this data set are: **
-```
-* mean(): Mean value
-* std(): Standard deviation
+subject_train    #volunteers 1- 30
+y_train          #Activity 1 -6
+X_train          #Test data set
 ```
 
-#####*End of file.*
+The user can run the **_run-analysis.R_** script from the R or R sutdio IDE, which will producing a data.table 
+named **ActvRecgnData.csv** saved in a hard drive. From there, the file is ready 
+to be used for anlysis and inference.  The .csv file can be opned by any editor/tool that can read csv. 
+
+The following versions for integrated development environment (IDE)  and the packages must
+e installed prior to running the sciprt.
+    
+
+    IDE      R studio      3.2.0
+    package  data.table    1.9.4 
+    package  dplyr         0.4.2      
+    package  plyr          1.8.3 
+    
+Take a look at the **CodeBook** marked document for information on the layout of the data set, the variables
+and their definitions, any units of measurement.
+
+
+
+
+-----------------**_End of README File_**---------------
