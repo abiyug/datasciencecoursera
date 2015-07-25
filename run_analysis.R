@@ -1,36 +1,34 @@
-# ########################################################################################
-# Course: getdata-030
-# Date:   07/13/2015
-#
-# Description: This R script generates a clean dataset from a raw data collected for the Activity Recognition 
-# Experiment Using Smartphone Sensors.
-#
-# The raw data can be downloaded from here:
-# https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip
-#
-# The following raw data is imported to a working directory in R.
-#
-# activity_labels  #Links the class labels with their activity name
-# features         #List of all features
-# 
-# subject_test     #volunteers 1 - 30
-# y_test           #activity 1-6
-# X_test           #Test dataset
-# 
-# subject_train    #volunteers 1- 30
-# y_train          #Activity 1 -6
-# X_train          #Test data set
-#
-# For additional information take a look at the README file.
-####################################################################################################
-setwd("~/Documents/Data-Science/GettingCleaningData/ProgramAssign-1/workDir") #set working direcotry
+#############################################################################################################
+# Script Name: run-analysis.R                                                                               #
+# Date: July 25, 2015                                                                                       #
+# Course: getdata-030                                                                                       #
+# Description: This script will download a ziped dataset and will tidy the dataset.                         #
+#              The script output can be confirmes with the steps at the end of the script.                  #
+#               For more information take a look at the README and CookBook documents.                      #
+#                                                                                                           #
+#############################################################################################################
 
-library(plyr) # load the plyr lib
-library(dplyr) #load the dplyr lib
-# 
-#features <- read.table("~/Documents/Data-Science/GettingCleaningData/ProgramAssign-1/UCI HAR Dataset/features.txt", quote="\"", comment.char="")
+if(!file.exists("./data")){dir.create("./data")}
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
+download.file(fileUrl, destfile = "./data/SamsungGalaxy.zip", method = "curl")
 
-#
+unzip("./data/SamsungGalaxy.zip") # unzip the downloaded file
+
+#copy the "test" raw data to the active directory
+y_test <- read.table("UCI HAR Dataset/test/y_test.txt")
+X_test <- read.table("UCI HAR Dataset/test/X_test.txt")
+subject_test <- read.table("UCI HAR Dataset/test/subject_test.txt")
+
+#copy the "train" raw data to the active directory
+y_train <- read.table("UCI HAR Dataset/train/y_train.txt")
+X_train <- read.table("UCI HAR Dataset/train/X_train.txt")
+subject_train <- read.table("UCI HAR Dataset/train/subject_train.txt")
+
+#copy the lable and feature files to working directory
+activity_labels <- read.table("UCI HAR Dataset/activity_labels.txt")
+features <- read.table("UCI HAR Dataset/features.txt")
+
+######################Modify labels the table ######################################################
 features$V1 <- NULL   # remove the extra column from features 
 
 names(y_test)[1] <- "activity" # change the default var name for y_test df
@@ -39,168 +37,113 @@ names(y_train)[1] <- "activity"# change the default var name for y_test df
 names(subject_test)[1] <- "volunteer"  # change the default var name for subject_test df
 names(subject_train)[1] <- "volunteer" # change the default var name for subject_test df
 
-dim(features)
-#[1] 561   1
+########################Combine the two datasets from test & train #################################
 
-dim(X_test)
-#[1] 2947  561
-dim(X_train)
-#[1] 7352  561
-
-#combine raws for X_test & X_train, y_test & y_train, subject_test & subject_train
 X_test_train <- rbind(X_test, X_train)
 y_test_train <- rbind(y_test, y_train)
 subject_test_train <- rbind(subject_test, subject_train)
 
-dim(X_test_train)
-# [1] 10299   561
+colnames(X_test_train) <- features$V2 #add the var labels for the combined dataset with the features table
 
-#convert df to dt
-class(X_test_train)
-#[1] "data.frame"
-X_test_train <- tbl_df(X_test_train) 
-class(X_test_train)
-#[1] "tbl_df"     "tbl"        "data.frame"
+df1 <- dplyr::bind_cols(subject_test_train, y_test_train, X_test_train) #bind activity, subject and X tables together by column 
 
-colnames(X_test_train) <- features$V2 #add the var labels for the combined dataset with a acolnames function
+df1 <- tbl_df(df1)  #Convert the combined data frame to data table to use plyr/dplyr packages
 
-names(X_test_train)  #confirm the columnes var name has changed
+###############convert activity_lable descriptoin to lower case ####################################
+actLvl <- sapply(activity_labels, tolower) # convert to lower case
+actLvl <- as.data.table(actLvl) # the above step convert the table into matrix. This step brings it back to table format
+actLvl$V1 <- as.numeric(as.character(actLvl$V1)) # Changes the column to numeric
 
-df1 <- dplyr::bind_cols(subject_test_train, y_test_train, X_test_train) #bind the three columns together 
+df12 <- df1 # make a copy of the data table for  backup
 
-dim(df1)
-#[1] 10299   563
+df12$activity <- with(actLvl, V2[match(df12$activity, V1)]) #replace activity lable from number to description
 
-names(df1)
-View(df1)
+#write.csv(df12, file = "Combined-raw-data-train-test.csv") # copy the combined data as backup
 
-#match col 1 of activity_labels (*by.x) data frame "to" col activity of df1 (*by.y), create a column matching lables
-df12 <- merge(df1, activity_labels, by.x='activity', by.y='V1', all.x=T)
+duplicated(colnames(df12)) #Verify dplicate column existance - False is none True is yes
+df12NoneDup <- df12[,!duplicated(colnames(df12))]#remove the duplicated columns
 
-df12 <- df12[,c(ncol(df12),1:(ncol(df12)-1))] # move the added column so it can be the first column
+############################group the data by volunteer and activity and distill the data to single mean value per activity
+df12Mean <- df12NoneDup  %>% group_by(volunteer, activity)  %>%  summarise_each(funs(mean))
 
-df12[,2]  <- NULL # remove a numeric only activity column
+############################ extract the volunteer, activity, mean and standard diviation measures Columns only####
+ActvRecgnData <- select(df12Mean, volunteer, activity, matches(".mean."), matches(".std."))
 
-df12 = df12[,c(2,1,3:563)] #<- reorder columns - volunteer then activity then mean/std columns
+######################changing variable names to a more readable format##############################
+names(ActvRecgnData) <- gsub("BodyAcc-mean()", "BAm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("GravityAcc-mean()",  "GAm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAccJerk-mean()" , "BAJm" , names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyGyro-mean()" , "BGm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyGyroJerk-mean()" , "BGJm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("GravityAccMag-mean()" , "GAMm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyGyroMag-mean()" , "BGMm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAcc-meanFreq()", "BAmF", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAccJerk-meanFreq()",  "BAJmF", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyGyro-meanFreq()" , "BGmF" , names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAccMag-mean()" , "BAMm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyBodyAccJerkMag-mean()" , "BBAJMm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyBodyGyroJerkMag-mean()" , "BBGJMm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyBodyGyroJerkMag-mean()" , "BBGJMm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAccJerkMag-mean()" , "BAJMm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyGyroJerkMag-mean()" , "BGJMm", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAccMag-meanFreq()" , "BAMmF", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyBodyAccJerkMag-meanFreq()" , "BBAJMmF", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyBodyGyroMag-meanFreq()" , "BBGMmF", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyBodyGyroJerkMag-meanFreq()" , "BBGJMmF", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAcc-std()", "BAs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("GravityAcc-std()",  "GAs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAccJerk-std()" , "BAJs" , names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyGyro-std()" , "BGs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyGyroJerk-std()" , "BGJs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("GravityAccMag-std()" , "GAMs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyGyroMag-std()" , "BGMs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAcc-stdFreq()", "BAsF", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAccJerk-stdFreq()",  "BAJsF", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyGyro-stdFreq()" , "BGsF" , names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAccMag-std()" , "BAMs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyBodyAccJerkMag-std()" , "BBAJMs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyBodyGyroJerkMag-std()" , "BBGJMs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyBodyGyroJerkMag-std()" , "BBGJMs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyAccJerkMag-std()" , "BAJMs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("BodyGyroJerkMag-std()" , "BGJMs", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("angle(tBodyAccMean,gravity)" , "atBAMg", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("angle(tBodyAccJerkMean),gravityMean)" , "atBAJMgM", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("angle(tBodyGyroMean,gravityMean)" , "atBGMgM", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("angle(tBodyGyroJerkMean,gravityMean)" , "atGJMgM", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("angle(X,gravityMean)" , "aXgM", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("angle(Y,gravityMean)" , "aYgM", names(ActvRecgnData), fixed = TRUE)
+names(ActvRecgnData) <- gsub("angle(Z,gravityMean)" , "aZgM", names(ActvRecgnData), fixed = TRUE)
 
-# distill the values to to a single mean value for each each volunteer and each activity type 
-df12Mean <- df12  %>% group_by(volunteer, activity)  %>% summarise_each(funs(mean))
+names(ActvRecgnData) <- gsub("-" , "", names(ActvRecgnData), fixed = TRUE) #remove the - from the variables
 
-df111 <- select(df12Mean, matches(".mean."))     #extract columns with only mean in ther column name
-df112 <- select(df12Mean, matches(".std."))      #extract columns with only std in their column name
-df113 <- select(df12Mean, activity)              #extract column with activity in the column name
+###############saving the table#######################################################################
+write.csv(ActvReconData, file = "ActivityRecogni-fnl.csv") #the final "tidy data" saved...
 
+#######The size of the clean data is shrinked by 99.7% 
 
-# Tidy table with 30 volunteers, each with 6 activity of 
-# 3-axial linear acceleration and 3-axial angular velocity of smartphone accelerometer & gyroscope
-
-dfFinal <- dplyr::bind_cols(df113, df111, df112) #bind the columns
-dfFinal <- dfFinal[,-c(3,56)] # remove the redundunt volunteer columns
-
-
-#Test
-head(dfFinal, 20)
-tail(dfFinal, 20)
-View(dfFinal)
-str(dfFinal)
-
-# > dim(dfFinal)
-# [1] 180  88
-
-# > str(dfFinal)
-# Classes ‘tbl_df’, ‘tbl’ and 'data.frame':	180 obs. of  88 variables:
-# $ volunteer                           : int  1 1 1 1 1 1 2 2 2 2 ...
-# $ activity                            : Factor w/ 6 levels "LAYING","SITTING",..: 1 2 3 4 5 6 1 2 3 4 ...
-# $ tBodyAcc-mean()-X                   : num  0.222 0.261 0.279 0.277 0.289 ...
-# $ tBodyAcc-mean()-Y                   : num  -0.04051 -0.00131 -0.01614 -0.01738 -0.00992 ...
-# $ tBodyAcc-mean()-Z                   : num  -0.113 -0.105 -0.111 -0.111 -0.108 ...
-# $ tGravityAcc-mean()-X                : num  -0.249 0.832 0.943 0.935 0.932 ...
-# $ tGravityAcc-mean()-Y                : num  0.706 0.204 -0.273 -0.282 -0.267 ...
-# $ tGravityAcc-mean()-Z                : num  0.4458 0.332 0.0135 -0.0681 -0.0621 ...
-# $ tBodyAccJerk-mean()-X               : num  0.0811 0.0775 0.0754 0.074 0.0542 ...
-# $ tBodyAccJerk-mean()-Y               : num  0.003838 -0.000619 0.007976 0.028272 0.02965 ...
-# $ tBodyAccJerk-mean()-Z               : num  0.01083 -0.00337 -0.00369 -0.00417 -0.01097 ...
-# $ tBodyGyro-mean()-X                  : num  -0.0166 -0.0454 -0.024 -0.0418 -0.0351 ...
-# $ tBodyGyro-mean()-Y                  : num  -0.0645 -0.0919 -0.0594 -0.0695 -0.0909 ...
-# $ tBodyGyro-mean()-Z                  : num  0.1487 0.0629 0.0748 0.0849 0.0901 ...
-# $ tBodyGyroJerk-mean()-X              : num  -0.1073 -0.0937 -0.0996 -0.09 -0.074 ...
-# $ tBodyGyroJerk-mean()-Y              : num  -0.0415 -0.0402 -0.0441 -0.0398 -0.044 ...
-# $ tBodyGyroJerk-mean()-Z              : num  -0.0741 -0.0467 -0.049 -0.0461 -0.027 ...
-# $ tBodyAccMag-mean()                  : num  -0.8419 -0.9485 -0.9843 -0.137 0.0272 ...
-# $ tGravityAccMag-mean()               : num  -0.8419 -0.9485 -0.9843 -0.137 0.0272 ...
-# $ tBodyAccJerkMag-mean()              : num  -0.9544 -0.9874 -0.9924 -0.1414 -0.0894 ...
-# $ tBodyGyroMag-mean()                 : num  -0.8748 -0.9309 -0.9765 -0.161 -0.0757 ...
-# $ tBodyGyroJerkMag-mean()             : num  -0.963 -0.992 -0.995 -0.299 -0.295 ...
-# $ fBodyAcc-mean()-X                   : num  -0.9391 -0.9796 -0.9952 -0.2028 0.0382 ...
-# $ fBodyAcc-mean()-Y                   : num  -0.86707 -0.94408 -0.97707 0.08971 0.00155 ...
-# $ fBodyAcc-mean()-Z                   : num  -0.883 -0.959 -0.985 -0.332 -0.226 ...
-# $ fBodyAcc-meanFreq()-X               : num  -0.1588 -0.0495 0.0865 -0.2075 -0.3074 ...
-# $ fBodyAcc-meanFreq()-Y               : num  0.0975 0.0759 0.1175 0.1131 0.0632 ...
-# $ fBodyAcc-meanFreq()-Z               : num  0.0894 0.2388 0.2449 0.0497 0.2943 ...
-# $ fBodyAccJerk-mean()-X               : num  -0.9571 -0.9866 -0.9946 -0.1705 -0.0277 ...
-# $ fBodyAccJerk-mean()-Y               : num  -0.9225 -0.9816 -0.9854 -0.0352 -0.1287 ...
-# $ fBodyAccJerk-mean()-Z               : num  -0.948 -0.986 -0.991 -0.469 -0.288 ...
-# $ fBodyAccJerk-meanFreq()-X           : num  0.132 0.257 0.314 -0.209 -0.253 ...
-# $ fBodyAccJerk-meanFreq()-Y           : num  0.0245 0.0475 0.0392 -0.3862 -0.3376 ...
-# $ fBodyAccJerk-meanFreq()-Z           : num  0.02439 0.09239 0.13858 -0.18553 0.00937 ...
-# $ fBodyGyro-mean()-X                  : num  -0.85 -0.976 -0.986 -0.339 -0.352 ...
-# $ fBodyGyro-mean()-Y                  : num  -0.9522 -0.9758 -0.989 -0.1031 -0.0557 ...
-# $ fBodyGyro-mean()-Z                  : num  -0.9093 -0.9513 -0.9808 -0.2559 -0.0319 ...
-# $ fBodyGyro-meanFreq()-X              : num  -0.00355 0.18915 -0.12029 0.01478 -0.10045 ...
-# $ fBodyGyro-meanFreq()-Y              : num  -0.0915 0.0631 -0.0447 -0.0658 0.0826 ...
-# $ fBodyGyro-meanFreq()-Z              : num  0.010458 -0.029784 0.100608 0.000773 -0.075676 ...
-# $ fBodyAccMag-mean()                  : num  -0.8618 -0.9478 -0.9854 -0.1286 0.0966 ...
-# $ fBodyAccMag-meanFreq()              : num  0.0864 0.2367 0.2846 0.1906 0.1192 ...
-# $ fBodyBodyAccJerkMag-mean()          : num  -0.9333 -0.9853 -0.9925 -0.0571 0.0262 ...
-# $ fBodyBodyAccJerkMag-meanFreq()      : num  0.2664 0.3519 0.4222 0.0938 0.0765 ...
-# $ fBodyBodyGyroMag-mean()             : num  -0.862 -0.958 -0.985 -0.199 -0.186 ...
-# $ fBodyBodyGyroMag-meanFreq()         : num  -0.139775 -0.000262 -0.028606 0.268844 0.349614 ...
-# $ fBodyBodyGyroJerkMag-mean()         : num  -0.942 -0.99 -0.995 -0.319 -0.282 ...
-# $ fBodyBodyGyroJerkMag-meanFreq()     : num  0.176 0.185 0.334 0.191 0.19 ...
-# $ angle(tBodyAccMean,gravity)         : num  0.021366 0.027442 -0.000222 0.060454 -0.002695 ...
-# $ angle(tBodyAccJerkMean),gravityMean): num  0.00306 0.02971 0.02196 -0.00793 0.08993 ...
-# $ angle(tBodyGyroMean,gravityMean)    : num  -0.00167 0.0677 -0.03379 0.01306 0.06334 ...
-# $ angle(tBodyGyroJerkMean,gravityMean): num  0.0844 -0.0649 -0.0279 -0.0187 -0.04 ...
-# $ angle(X,gravityMean)                : num  0.427 -0.591 -0.743 -0.729 -0.744 ...
-# $ angle(Y,gravityMean)                : num  -0.5203 -0.0605 0.2702 0.277 0.2672 ...
-# $ angle(Z,gravityMean)                : num  -0.3524 -0.218 0.0123 0.0689 0.065 ...
-# $ tBodyAcc-std()-X                    : num  -0.928 -0.977 -0.996 -0.284 0.03 ...
-# $ tBodyAcc-std()-Y                    : num  -0.8368 -0.9226 -0.9732 0.1145 -0.0319 ...
-# $ tBodyAcc-std()-Z                    : num  -0.826 -0.94 -0.98 -0.26 -0.23 ...
-# $ tGravityAcc-std()-X                 : num  -0.897 -0.968 -0.994 -0.977 -0.951 ...
-# $ tGravityAcc-std()-Y                 : num  -0.908 -0.936 -0.981 -0.971 -0.937 ...
-# $ tGravityAcc-std()-Z                 : num  -0.852 -0.949 -0.976 -0.948 -0.896 ...
-# $ tBodyAccJerk-std()-X                : num  -0.9585 -0.9864 -0.9946 -0.1136 -0.0123 ...
-# $ tBodyAccJerk-std()-Y                : num  -0.924 -0.981 -0.986 0.067 -0.102 ...
-# $ tBodyAccJerk-std()-Z                : num  -0.955 -0.988 -0.992 -0.503 -0.346 ...
-# $ tBodyGyro-std()-X                   : num  -0.874 -0.977 -0.987 -0.474 -0.458 ...
-# $ tBodyGyro-std()-Y                   : num  -0.9511 -0.9665 -0.9877 -0.0546 -0.1263 ...
-# $ tBodyGyro-std()-Z                   : num  -0.908 -0.941 -0.981 -0.344 -0.125 ...
-# $ tBodyGyroJerk-std()-X               : num  -0.919 -0.992 -0.993 -0.207 -0.487 ...
-# $ tBodyGyroJerk-std()-Y               : num  -0.968 -0.99 -0.995 -0.304 -0.239 ...
-# $ tBodyGyroJerk-std()-Z               : num  -0.958 -0.988 -0.992 -0.404 -0.269 ...
-# $ tBodyAccMag-std()                   : num  -0.7951 -0.9271 -0.9819 -0.2197 0.0199 ...
-# $ tGravityAccMag-std()                : num  -0.7951 -0.9271 -0.9819 -0.2197 0.0199 ...
-# $ tBodyAccJerkMag-std()               : num  -0.9282 -0.9841 -0.9931 -0.0745 -0.0258 ...
-# $ tBodyGyroMag-std()                  : num  -0.819 -0.935 -0.979 -0.187 -0.226 ...
-# $ tBodyGyroJerkMag-std()              : num  -0.936 -0.988 -0.995 -0.325 -0.307 ...
-# $ fBodyAcc-std()-X                    : num  -0.9244 -0.9764 -0.996 -0.3191 0.0243 ...
-# $ fBodyAcc-std()-Y                    : num  -0.834 -0.917 -0.972 0.056 -0.113 ...
-# $ fBodyAcc-std()-Z                    : num  -0.813 -0.934 -0.978 -0.28 -0.298 ...
-# $ fBodyAccJerk-std()-X                : num  -0.9642 -0.9875 -0.9951 -0.1336 -0.0863 ...
-# $ fBodyAccJerk-std()-Y                : num  -0.932 -0.983 -0.987 0.107 -0.135 ...
-# $ fBodyAccJerk-std()-Z                : num  -0.961 -0.988 -0.992 -0.535 -0.402 ...
-# $ fBodyGyro-std()-X                   : num  -0.882 -0.978 -0.987 -0.517 -0.495 ...
-# $ fBodyGyro-std()-Y                   : num  -0.9512 -0.9623 -0.9871 -0.0335 -0.1814 ...
-# $ fBodyGyro-std()-Z                   : num  -0.917 -0.944 -0.982 -0.437 -0.238 ...
-# $ fBodyAccMag-std()                   : num  -0.798 -0.928 -0.982 -0.398 -0.187 ...
-# $ fBodyBodyAccJerkMag-std()           : num  -0.922 -0.982 -0.993 -0.103 -0.104 ...
-# $ fBodyBodyGyroMag-std()              : num  -0.824 -0.932 -0.978 -0.321 -0.398 ...
-# $ fBodyBodyGyroJerkMag-std()          : num  -0.933 -0.987 -0.995 -0.382 -0.392 ...
-
-#Save data to csv or txt 
-#mydata <- read.table("tidyActvtyRecognSmartPhon.txt", header = TRUE) #save as txt
-#write.csv(dfFinal, file="tidyActvtyRecognSmartPhon.csv") # save as csv
-
-
-
+# ###########Confirm/test the output file############################################################
+# > dim(df12)
+# [1] 10299   563    <------------Before tidy data table dimension 563 columns and 10,299 rows
+# 
+# > object.size(df12) <-----------Before tiday data table size in bytes 46.4 MB
+# 46412664 bytes
+# 
+# End data set size is as follows:
+# > dim(ActvRecgnData)
+# [1] 180  88     <--------After tidy data table dimension to 88 Columns and 180 rows
+# > 
+# > object.size(ActvRecgnData)
+# 142872 bytes    <--------After tidy data table size in bytes 0.14MB
+# 
+# > (object.size(ActvRecgnData) / object.size(df12)) * 100
+# 0.307829776804021 bytes  <--- 0.31%  
+#
+# count the number of mean and std occurances  before and after - expect the same
+# > length(grep("std", names(df12Mean))) <-----Before
+# [1] 33
+# > length(grep("mean", names(df12Mean))) <---Before
+# 
+# > length(grep("mean", names(ActvRecgnData))) <--After
+# [1] 46
+# > length(grep("std", names(ActvRecgnData))) <--After
+# [1] 33
