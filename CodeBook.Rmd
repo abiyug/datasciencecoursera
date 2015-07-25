@@ -77,7 +77,7 @@ Next, the **activity_labels** dataset contain the six activities for this experi
 _Her is the command that was used:_
 ```javascript
 df12$activity <- with(actLvl, V2[match(df12$activity, V1)]) 
-```javascript
+```
 The duplicate function was used to  check and remove duplicate columns. 
 
 _Here is the command that was used:_
