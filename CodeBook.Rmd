@@ -1,0 +1,229 @@
+---
+title: "CodeBook"
+output: html_document
+---
+
+**_On this Page, you will find:_**
+```
+1. Background and Overview
+2. Downloaded Dataset description
+3. Activity type and volunter numbering descirption
+4. Data combination and prepration 
+5. Variable summarization and inclusion
+6. Variable naming convention
+7. License/reference
+```
+
+### 1. Background and Overview
+The ‘human activity recognition experiment using smartphone embedded sensors such as gyroscope and accelerometer was carried out to identify the type of activity the owner of a smartphone may be engaged in based on the data emitted from the sensors. 30 Volunteers were chosen and were asked to walk on even ground, walk up the stairs, walk down the stairs, seat, stand and lay down. Using its embedded accelerometer and gyroscope, the experimenters captured 3-axial linear acceleration and 3-axial angular velocity while wearing a smartphone (Samsung Galaxy S II) attached to their waist. The accelerometer produces data in units of acceleration (distance over time2), and the gyroscope produces data in units of rotational velocity (rotation distance over time) measures rotation around three axes: x, y, and z. The captured data was randomly partitioned in two sets. The first dataset, where 70% of the volunteers data collection was labeled training(train), and the second set, the remaining 30%, was labeled testing(test). 
+
+The objective is to clean the untidy raw data, and generate a data set that conforms to the *'tidy'* data rule. 
+
+### 2. Downloaded Dataset description
+The dataset include the following files:
+
+dataset Name            | Description
+------------------------|-------------------------------------------------------------------
+features_info.txt       | Shows information about the variables used on the feature vector. 
+features.txt            | List of all features.                                             
+activity_labels.txt     | Links the class labels with their activity name.                  
+train/X_train.txt       | Training set.                                                     
+train/y_train.txt       | Training labels.                                                  
+test/X_test.txt         | Test set.                                                         
+test/y_test.txt         | Test labels.
+
+
+**Here is an example read of 3-axial linear acceleration and 3-axial angular velocity**
+```
+Accelarometer                   Gyrometer
+Ax         Ay       Az      Gx   Gy   Gz
+-6616    13880    -1380    915    -68    -49
+-6624    13924    -1496    909    -41    -136
+-6680    13896    -1408    917    -46    -148
+```
+The 3 axile motions:  ![gyro](http://www.seeedstudio.com/wiki/images/thumb/c/c2/Gyro_Reference_1.jpg/500px-Gyro_Reference_1.jpg)
+ 
+###3.  Activity type and volunter numbering descirption
+
+The experiments have been carried out with a group of 30 volunteers *(labled 1 to 30)**. Each row identifies the volunteer who performed each of the six activity. The activities are labled as follows:
+
+   No. | Activity           
+ ------|---------------------
+   1   | walking 
+   2   | walking_upstairs 
+   3   | walking_downstairs
+   4   | sitting
+   5   | standing
+   6   |laying
+
+
+### 4. Data combination and prepration 
+When downloading the data the data comes ziped. the first action is to unzip the file.  Since the different files contain different part of the same observation and had a raw variable name, the next step is to provide a recognizable variable name and to assemble the the files into a single table.  We start with changing the variable names for volunteers - and activity, and ket the default for the rest (the rest were also modified later - will be explained).
+
+Start the combination for the test-X/train-X, test-y/train-y, test_subject/train_subject datasets using the ‘rbind’ function, and applied the feature file as a variable name for the combined dataset using the ‘colname’ function.  The next step is to put all the data sets together. The dplyr  bind_cols function was used to achieve that. 
+
+_Here are the commands used:_
+```javascript
+X_test_train <- rbind(X_test, X_train)
+y_test_train <- rbind(y_test, y_train)
+subject_test_train <- rbind(subject_test, subject_train)
+colnames(X_test_train) <- features$V2 
+df1 <- dplyr::bind_cols(subject_test_train, y_test_train, X_test_train) 
+```
+The combination of this data frame results in 563 columns and 10,299 rows.  Convert the data frame to data table to apply data table packages.
+
+Next, the **activity_labels** dataset contain the six activities for this experiment in assigned number and description. 1. walking 2. walking-upstairs etc. The ‘match’ function was used to replace the activity label from number to descriptive in the combined dataset. 
+
+_Her is the command that was used:_
+```javascript
+df12$activity <- with(actLvl, V2[match(df12$activity, V1)]) 
+```javascript
+The duplicate function was used to  check and remove duplicate columns. 
+
+_Here is the command that was used:_
+```javascript
+duplicated(colnames(df12)) #Verify duplicate column existence - False is none True is yes
+df12NoneDup <- df12[,!duplicated(colnames(df12))]#remove the duplicated columns
+```
+
+### 5. Variable summarization and inclusion
+The dataset contain data measurement signals that were used to estimate variables of the feature vector for each patterns.  'XYZ' is used to denote 3-axial signals in the X, Y and Z directions. However for this data table it was requested to capture **all of the “mean” and “standard deviation” for all measurements, including Frequency and angle.** 
+
+Before extracting the files, the table was grouped by volunteer and activity.  For that we used a deployer package group_by function.  Since there were many obersravtions of the same activity per volunteer, the plyr package summarise_each function was used to distill all observations to single observation taking the average of all the observations. 
+
+_Here is the command used:_
+```javascript
+df12Mean <- df12NoneDup  %>% group_by(volunteer, activity)  %>%  summarise_each(funs(mean))
+```
+Because the assignment calls for “Extracting only the measurements on the mean and standard deviation for each measurement. “ The following command is used to extract all columns with variable name that includes ‘mean’ or ‘std’.
+
+
+_Here is the command that was used:_
+```javascript
+ActvRecgnData <- select(df12Mean, volunteer, activity, matches(".mean."), matches(".std."))
+```
+
+This results in a data table that is 180 rows and 88 columns. 
+
+```
+_> dim(ActvRecgnData)_
+**[1] 180  88**
+
+**The size of the fils  0.14MB**
+_> object.size(ActvRecgnData)_
+_140800 bytes_
+```
+
+The final tidy data is **_ActvRecgndata_**. And it can be saved as a csv file and shared.
+```javascript
+write.csv(ActvReconData, file = "ActivityRecogni-fnl.csv") #the final "tidy data" saved...
+```
+
+
+Here are the variable names. (look at section 6 for detail of variable naming convention)
+
+```
+>names(ActvRecgnData)
+
+ [1] "volunteer" "activity"  "tBAmX"     "tBAmY"     "tBAmZ"     "tGAmX"     "tGAmY"     "tGAmZ"    
+ [9] "tBAJmX"    "tBAJmY"    "tBAJmZ"    "tBGmX"     "tBGmY"     "tBGmZ"     "tBGJmX"    "tBGJmY"   
+[17] "tBGJmZ"    "tBAMm"     "tGAMm"     "tBAJMm"    "tBGMm"     "tBGJMm"    "fBAmX"     "fBAmY"    
+[25] "fBAmZ"     "fBAmFX"    "fBAmFY"    "fBAmFZ"    "fBAJmX"    "fBAJmY"    "fBAJmZ"    "fBAJmFX"  
+[33] "fBAJmFY"   "fBAJmFZ"   "fBGmX"     "fBGmY"     "fBGmZ"     "fBGmFX"    "fBGmFY"    "fBGmFZ"   
+[41] "fBAMm"     "fBAMmF"    "fBBAJMm"   "fBBAJMmF"  "fBodyBGMm" "fBBGMmF"   "fBBGJMm"   "fBBGJMmF" 
+[49] "atBAMg"    "atBAJMgM"  "atBGMgM"   "atGJMgM"   "aXgM"      "aYgM"      "aZgM"      "tBAsX"    
+[57] "tBAsY"     "tBAsZ"     "tGAsX"     "tGAsY"     "tGAsZ"     "tBAJsX"    "tBAJsY"    "tBAJsZ"   
+[65] "tBGsX"     "tBGsY"     "tBGsZ"     "tBGJsX"    "tBGJsY"    "tBGJsZ"    "tBAMs"     "tGAMs"    
+[73] "tBAJMs"    "tBGMs"     "tBGJMs"    "fBAsX"     "fBAsY"     "fBAsZ"     "fBAJsX"    "fBAJsY"   
+[81] "fBAJsZ"    "fBGsX"     "fBGsY"     "fBGsZ"     "fBAMs"     "fBBAJMs"   "fBodyBGMs" "fBBGJMs"  
+> 
+```
+
+## 6. Variable naming convention
+The column name element abbreviation are created by using the first letter of the element used from the features data. Here is an example of column name abbreviation reading:
+
+```
+                Feature Variable                Acronym Variable
+                
+example 1: fBodyAccMag-meanFreq                 fBAMmF
+example 2: tBodyAccJerkMag-std                  tBAJMs
+example 3: angle(tBodyAccMean,gravity)          atBAMg
+
+```
+
+**Mapping of column name elements table:**
+
+```
+Element                              Abbreviation 
+
+time                                    t        
+Fast Fourier Transform                  f        
+Standard Deviation (Std)                s        
+Mean                                    m
+Jerk                                    J
+Gyro                                    G
+Body                                    B
+angle                                   a
+Frequency                               F
+gravity                                 g
+X axis                                  X
+Y axis                                  Y
+Z axis                                  Z
+BodyAcc-mean                            BAm
+GravityAcc-mean                         GAm
+BodyAccJerk-mean                        BAJm 
+BodyGyro-mean                           BGm
+BodyGyroJerk-mean                       BGJm
+GravityAccMag-mean                      GAMm
+BodyGyroMag-mean                        BGMm
+BodyAcc-meanFreq                        BAmF
+BodyAccJerk-meanFreq                    BAJmF
+BodyGyro-meanFreq                       BGmF 
+BodyAccMag-mean                         BAMm
+BodyBodyAccJerkMag-mean                 BBAJMm
+BodyBodyGyroJerkMag-mean                BBGJMm
+BodyBodyGyroJerkMag-mean                BBGJMm
+BodyAccJerkMag-mean                     BAJMm
+BodyGyroJerkMag-mean                    BGJMm
+BodyAccMag-meanFreq                     BAMmF
+BodyBodyAccJerkMag-meanFreq             BBAJMmF
+BodyBodyGyroMag-meanFreq                BBGMmF
+BodyBodyGyroJerkMag-meanFreq            BBGJMmF
+BodyAcc-std                             BAs
+GravityAcc-std                          GAs
+BodyAccJerk-std                         BAJs 
+BodyGyro-std                            BGs
+BodyGyroJerk-std                        BGJs
+GravityAccMag-std                       GAMs
+BodyGyroMag-std                         BGMs
+BodyAcc-stdFreq                         BAsF
+BodyAccJerk-stdFreq                     BAJsF
+BodyGyro-stdFreq                        BGsF 
+BodyAccMag-std                          BAMs
+BodyBodyAccJerkMag-std                  BBAJMs
+BodyBodyGyroJerkMag-std                 BBGJMs
+BodyBodyGyroJerkMag-std                 BBGJMs
+BodyAccJerkMag-std                      BAJMs
+BodyGyroJerkMag-std                     BGJMs
+angle(tBodyAccMeangravity)              atBAMg
+angle(tBodyAccJerkMean)gravityMean)     atBAJMgM
+angle(tBodyGyroMeangravityMean)         atBGMgM
+angle(tBodyGyroJerkMeangravityMean)     atGJMgM
+angle(XgravityMean)                     aXgM
+angle(YgravityMean)                     aYgM
+angle(ZgravityMean)                     aZgM
+```
+
+
+
+7. License/referencing
+========
+Use of this dataset in publications must be acknowledged by referencing the following publication [1] 
+
+[1] Davide Anguita, Alessandro Ghio, Luca Oneto, Xavier Parra and Jorge L. Reyes-Ortiz. Human Activity Recognition on Smartphones using a Multiclass Hardware-Friendly Support Vector Machine. International Workshop of Ambient Assisted Living (IWAAL 2012). Vitoria-Gasteiz, Spain. Dec 2012
+
+This dataset is distributed AS-IS and no responsibility implied or explicit can be addressed to the authors or their institutions for its use or misuse. Any commercial use is prohibited.
+
+Jorge L. Reyes-Ortiz, Alessandro Ghio, Luca Oneto, Davide Anguita. November 2012.
+
+**For more information about this dataset contact: activityrecognition@smartlab.ws**
