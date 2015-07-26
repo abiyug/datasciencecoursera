@@ -28,7 +28,13 @@ subject_train <- read.table("UCI HAR Dataset/train/subject_train.txt")
 activity_labels <- read.table("UCI HAR Dataset/activity_labels.txt")
 features <- read.table("UCI HAR Dataset/features.txt")
 
-######################Modify labels the table ######################################################
+######################## Add packages ###############################################################
+
+library(plyr)
+library(dplyr)
+library(data.table)
+
+###################### Modify labels the table ######################################################
 features$V1 <- NULL   # remove the extra column from features 
 
 names(y_test)[1] <- "activity" # change the default var name for y_test df
@@ -49,7 +55,7 @@ df1 <- dplyr::bind_cols(subject_test_train, y_test_train, X_test_train) #bind ac
 
 df1 <- tbl_df(df1)  #Convert the combined data frame to data table to use plyr/dplyr packages
 
-###############convert activity_lable descriptoin to lower case ####################################
+############### Convert activity_lable descriptoin to lower case ####################################
 actLvl <- sapply(activity_labels, tolower) # convert to lower case
 actLvl <- as.data.table(actLvl) # the above step convert the table into matrix. This step brings it back to table format
 actLvl$V1 <- as.numeric(as.character(actLvl$V1)) # Changes the column to numeric
@@ -63,13 +69,13 @@ df12$activity <- with(actLvl, V2[match(df12$activity, V1)]) #replace activity la
 duplicated(colnames(df12)) #Verify dplicate column existance - False is none True is yes
 df12NoneDup <- df12[,!duplicated(colnames(df12))]#remove the duplicated columns
 
-############################group the data by volunteer and activity and distill the data to single mean value per activity
+############################ Group the data by volunteer and activity and distill the data to single mean value per activity
 df12Mean <- df12NoneDup  %>% group_by(volunteer, activity)  %>%  summarise_each(funs(mean))
 
-############################ extract the volunteer, activity, mean and standard diviation measures Columns only####
+############################ Extract the volunteer, activity, mean and standard diviation measures Columns only####
 ActvRecgnData <- select(df12Mean, volunteer, activity, matches(".mean."), matches(".std."))
 
-######################changing variable names to a more readable format##############################
+###################### Changing variable names to a more readable format##############################
 names(ActvRecgnData) <- gsub("BodyAcc-mean()", "BAm", names(ActvRecgnData), fixed = TRUE)
 names(ActvRecgnData) <- gsub("GravityAcc-mean()",  "GAm", names(ActvRecgnData), fixed = TRUE)
 names(ActvRecgnData) <- gsub("BodyAccJerk-mean()" , "BAJm" , names(ActvRecgnData), fixed = TRUE)
@@ -116,12 +122,14 @@ names(ActvRecgnData) <- gsub("angle(Z,gravityMean)" , "aZgM", names(ActvRecgnDat
 
 names(ActvRecgnData) <- gsub("-" , "", names(ActvRecgnData), fixed = TRUE) #remove the - from the variables
 
-###############saving the table#######################################################################
+############### Saving the table#######################################################################
 write.csv(ActvReconData, file = "ActivityRecogni-fnl.csv") #the final "tidy data" saved...
 
-#######The size of the clean data is shrinked by 99.7% 
+write.table(ActvRecgnData, file="ActivityRecogn-fnl.txt", row.names = FALSE) #save as text
 
-# ###########Confirm/test the output file############################################################
+####### The size of the clean data is shrunk by 99.7% 
+
+############ Confirm/test the output file############################################################
 # > dim(df12)
 # [1] 10299   563    <------------Before tidy data table dimension 563 columns and 10,299 rows
 # 
