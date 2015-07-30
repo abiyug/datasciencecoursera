@@ -2,8 +2,8 @@
 # Script Name: run-analysis.R                                                                                      #
 # Date: July 25, 2015                                                                                              #
 # Course: getdata-030                                                                                              #
-# Description: This script will download a ziped untidy dataset and will tidy and store it in csv format.         #
-#              The script output can be confirmes with the steps at the end of the script.                         #
+# Description: This script will download a ziped untidy dataset and will tidy and store it in csv format.          #
+#              The script output can be verified using the steps at the end of the script.                         #
 #              For more information take a look at the README and CookBook documents.                              #
 #                                                                                                                  #
 ####################################################################################################################
