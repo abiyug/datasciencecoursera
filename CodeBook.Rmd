@@ -70,7 +70,7 @@ subject_test_train <- rbind(subject_test, subject_train)
 colnames(X_test_train) <- features$V2 
 df1 <- dplyr::bind_cols(subject_test_train, y_test_train, X_test_train) 
 ```
-The combination of this data frame results in 563 columns and 10,299 rows.  Convert the data frame to data table to apply data table packages.
+The combination of this data frame results in 563 columns and 10,299 rows.  Convert the data frame to data table format inorder to apply data table packages.
 
 Next, the **activity_labels** dataset contain the six activities for this experiment in assigned number and description. 1. walking 2. walking-upstairs etc. The ‘match’ function was used to replace the activity label from number to descriptive in the combined dataset. 
 
