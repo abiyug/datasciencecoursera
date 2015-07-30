@@ -2,7 +2,7 @@
 title: "REAMDE"
 output: html_document
 ---
-
+#REAMDE
 The **run-analysis.R** scripts ingest untidy  raw data and cleans up the 
 data premised on data tidy rules. ie -observations are in rows - variables are in
 columns - contained in a single dataset, and saves it as csv file.  
