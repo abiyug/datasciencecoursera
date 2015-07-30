@@ -1,12 +1,12 @@
-#############################################################################################################
-# Script Name: run-analysis.R                                                                               #
-# Date: July 25, 2015                                                                                       #
-# Course: getdata-030                                                                                       #
-# Description: This script will download a ziped dataset and will tidy the dataset.                         #
-#              The script output can be confirmes with the steps at the end of the script.                  #
-#               For more information take a look at the README and CookBook documents.                      #
-#                                                                                                           #
-#############################################################################################################
+####################################################################################################################
+# Script Name: run-analysis.R                                                                                      #
+# Date: July 25, 2015                                                                                              #
+# Course: getdata-030                                                                                              #
+# Description: This script will download a ziped untidy dataset and will tidy the data ans store it in csv format. #                 #
+#              The script output can be confirmes with the steps at the end of the script.                         #
+#              For more information take a look at the README and CookBook documents.                              #
+#                                                                                                                  #
+####################################################################################################################
 
 if(!file.exists("./data")){dir.create("./data")}
 fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip"
