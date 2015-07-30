@@ -4,7 +4,7 @@
 # Course: getdata-030                                                                                              #
 # Description: This script will download a ziped untidy dataset and will tidy and store it in csv format.          #
 #              The script output can be verified using the steps at the end of the script.                         #
-#              For more information on variables and measurments take a look at the README and CookBook document   #
+#              For more information on variables and measurments take a look at the README & CookBook documents.   #
 #                                                                                                                  #
 ####################################################################################################################
 
