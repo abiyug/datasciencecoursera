@@ -4,14 +4,14 @@ output: html_document
 ---
 
 The **run-analysis.R** scripts ingest untidy  raw data and cleans up the 
-data premised on tidy rules -observations are in rows - variables are in
+data premised on data tidy rules. ie -observations are in rows - variables are in
 columns - contained in a single dataset, and saves it as csv file.  
 
 The script first downloads a human activity recognition raw dataset collected from 
 smartphone (samsung-II) with its embedded accelerometer and gyroscope.
 The raw dataset can be downloaded [from here](https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip). 
 
-The script will then unzip and load the following files in R studios's working directory. 
+The script will then unzip and load the following files in R  working directory. 
 ```
 activity_labels  #Links the class labels with their activity name
 features         #List of all features
@@ -25,12 +25,11 @@ y_train          #Activity 1 -6
 X_train          #Test data set
 ```
 
-The user can run the **_run-analysis.R_** script from the R or R sutdio IDE, which will producing a data.table 
+The user can run the **_run-analysis.R_** script from the R or R sutdio IDE - which will generate a data.table 
 named **ActvRecgnData.csv** saved in a hard drive. From there, the file is ready 
-to be used for anlysis and inference.  The .csv file can be opned by any editor/tool that can read csv. 
+to be used for anlysis and inference.  The .csv file can be opned by any editor/tool that can read csv format. 
 
-The following versions for integrated development environment (IDE)  and the packages must
-e installed prior to running the sciprt.
+The following versions for integrated development environment (IDE)  and the packages were  installed prior to running the sciprt.
     
 
     IDE      R studio      3.2.0
