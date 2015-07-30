@@ -35,7 +35,7 @@ library(plyr)
 library(dplyr)
 library(data.table)
 
-###################### Modify labels the table ######################################################
+###################### Modify labels fortables ######################################################
 features$V1 <- NULL   # remove the extra column from features 
 
 names(y_test)[1] <- "activity" # change the default var name for y_test df
@@ -128,7 +128,7 @@ write.csv(ActvReconData, file = "ActivityRecogni-fnl.csv") #the final "tidy data
 
 write.table(ActvRecgnData, file="ActivityRecogn-fnl.txt", row.names = FALSE) #save as text
 
-####### The size of the clean data is shrunk by 99.7% 
+####### The size of the clean data is shrunk by 99.7%!!!
 
 ############ Confirm/test the output file############################################################
 # > dim(df12)
