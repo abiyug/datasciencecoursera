@@ -89,7 +89,7 @@ df12NoneDup <- df12[,!duplicated(colnames(df12))]#remove the duplicated columns
 ### 5. Variable summarization and inclusion
 The dataset contain data measurement signals that were used to estimate variables of the feature vector for each patterns.  'XYZ' is used to denote 3-axial signals in the X, Y and Z directions. However for this data table it was requested to capture **all of the “mean” and “standard deviation” for all measurements, including Frequency and angle.** 
 
-Before extracting the files, the table was grouped by volunteer and activity.  For that we used a deployer package group_by function.  Since there were many obersravtions of the same activity per volunteer, the plyr package summarise_each function was used to distill all observations to single observation taking the average of all the observations. 
+Before extracting the files, the table was grouped by volunteer and activity.  For that we used a dplyr package group_by function.  Since there were many obersravtions of the same activity per volunteer, the plyr package summarise_each function was used to distill all observations to single observation taking the average of all the observations. 
 
 _Here is the command used:_
 ```javascript
