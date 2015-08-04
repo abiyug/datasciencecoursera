@@ -147,11 +147,6 @@ write.table(ActvRecgnData, file="ActivityRecogn-fnl.txt", row.names = FALSE) #sa
 # > (object.size(ActvRecgnData) / object.size(df12)) * 100
 # 0.307829776804021 bytes  <--- 0.31%  
 #
-# count the number of mean and std occurances  before and after - expect the same
-# > length(grep("std", names(df12Mean))) <-----Before
-# [1] 33
-# > length(grep("mean", names(df12Mean))) <---Before
-# 
 # > length(grep("mean", names(ActvRecgnData))) <--After
 # [1] 46
 # > length(grep("std", names(ActvRecgnData))) <--After
